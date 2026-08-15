@@ -33,6 +33,7 @@ def start_craigslist_post(data):
     options.add_argument("--disable-dev-shm-usage") # Overcomes limited resource problems in Docker/VPS
     options.add_argument("--disable-gpu")          # Disables hardware acceleration
     options.add_argument("--remote-debugging-port=9222") # Avoids port allocation crashes
+    options.add_argument("--window-size=1920,1080") # Forces the desktop layout instead of Craigslist's mobile UI
 
     # Initialize the driver with the new options
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
@@ -42,12 +43,12 @@ def start_craigslist_post(data):
         print("Opening Craigslist...")
         driver.get(data["city_url"])
 
-        # Click "post to classifieds" (matched by link text since Craigslist's
-        # markup/ids for this link have changed over the years)
+        # Click "post to classifieds" (matched by the link's href pattern since
+        # Craigslist's ids/visible text for this link vary by layout)
         print("Starting new post...")
         WebDriverWait(driver, 15).until(
             EC.element_to_be_clickable(
-                (By.XPATH, "//a[contains(., 'post to classifieds')]")
+                (By.CSS_SELECTOR, "a[href*='/post/'], a[href*='post.craigslist.org']")
             )
         ).click()
 
