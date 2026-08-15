@@ -1,25 +1,18 @@
-import time
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+     from selenium import webdriver
+     from selenium.webdriver.chrome.service import Service
+     from webdriver_manager.chrome import ChromeDriverManager
 
-# 1. Define your marketplace item data structure
-item_data = {
-    "city_url": "https://craigslist.org", # Use your local Craigslist URL
-    "title": "Minimalist Wooden Coffee Table",
-    "price": "120",
-    "postal_code": "01701",
-    "description": "Excellent condition solid wood coffee table. Moving sale.\n\nPick up only.",
-    "email": "your_email@example.com",
-    "phone": "555-123-4567"
-}
+     # Initialize Chrome Options
+     options = webdriver.ChromeOptions()
 
-def start_craigslist_post(data):
-    # Initialize the Chrome browser automatically
-    options = webdriver.ChromeOptions()
-    # options.add_argument("--headless") # Uncomment to run in the background
-    
+     # --- CRITICAL FIXES FOR HEADLESS / LINUX ENVIRONMENTS ---
+     options.add_argument("--headless=new")       # Run without a GUI (mandatory for servers)
+     options.add_argument("--no-sandbox")          # Bypass OS security model (fixes system bus errors)
+     options.add_argument("--disable-dev-shm-usage") # Overcomes limited resource problems in Docker/VPS
+     options.add_argument("--disable-gpu")          # Disables hardware acceleration
+     options.add_argument("--remote-debugging-port=9222") # Avoids port allocation crashes
+
+     # Initialize the driver with the new options
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     driver.implicitly_wait(10) # Wait up to 10 seconds for elements to appear
     
