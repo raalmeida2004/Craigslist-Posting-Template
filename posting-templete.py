@@ -12,6 +12,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 item_data = {
     "city_url": "https://boston.craigslist.org/",
     "sub_area": "metro west",  # matches "choose the location that fits best" options
+    "category": "general for sale",  # matches an "option-label" on the category picker
     "title": "2026 Vtr tank pro *elite*",
     "price": "1850",
     "postal_code": "01702",
@@ -81,8 +82,18 @@ def start_craigslist_post(data):
         # Note: You may need to adjust these selectors based on your specific location's workflow
         driver.find_element(By.XPATH, "//input[@value='fso']").click()
 
-        # Select category: "furniture - by owner" as an example
-        driver.find_element(By.XPATH, "//input[@value='fsa']").click()
+        # Select the category. Craigslist's category ids are numeric and vary
+        # by region, so match on the visible option-label text instead.
+        WebDriverWait(driver, 15).until(
+            EC.element_to_be_clickable(
+                (
+                    By.XPATH,
+                    f"//label[contains(@class, 'radio-option')]"
+                    f"[.//span[normalize-space(text())='{data['category']}']]",
+                )
+            )
+        ).click()
+        driver.find_element(By.NAME, "go").click()
 
         print("Filling out form data...")
         # Fill out Title
