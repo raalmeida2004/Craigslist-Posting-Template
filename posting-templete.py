@@ -1,5 +1,3 @@
-import time
-
 from selenium import webdriver
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.chrome.service import Service
@@ -133,9 +131,10 @@ def start_craigslist_post(data):
         print("Form filled. Moving to next step...")
         click_when_ready(driver, (By.NAME, "go"))
 
-        # Pause to let you review or manually complete images/publishing
-        print("Template complete. Script holding open for 60 seconds for manual review.")
-        time.sleep(60)
+        # Hold the browser open until you're done adding photos and publishing,
+        # instead of a fixed sleep that can close it out from under you mid-action.
+        print("Template complete. Add photos and finish publishing in the browser window.")
+        input("Press Enter here once you're done (this keeps the browser open until then)...")
 
     except Exception as e:
         print(f"An error occurred: {e}")
