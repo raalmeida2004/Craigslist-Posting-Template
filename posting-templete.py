@@ -1,67 +1,84 @@
-     from selenium import webdriver
-     from selenium.webdriver.chrome.service import Service
-     from webdriver_manager.chrome import ChromeDriverManager
+import time
 
-     # Initialize Chrome Options
-     options = webdriver.ChromeOptions()
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
 
-     # --- CRITICAL FIXES FOR HEADLESS / LINUX ENVIRONMENTS ---
-     options.add_argument("--headless=new")       # Run without a GUI (mandatory for servers)
-     options.add_argument("--no-sandbox")          # Bypass OS security model (fixes system bus errors)
-     options.add_argument("--disable-dev-shm-usage") # Overcomes limited resource problems in Docker/VPS
-     options.add_argument("--disable-gpu")          # Disables hardware acceleration
-     options.add_argument("--remote-debugging-port=9222") # Avoids port allocation crashes
+# Example item data — replace with your real posting details before running.
+item_data = {
+    "city_url": "https://sfbay.craigslist.org/",
+    "title": "Example Item Title",
+    "price": "100",
+    "postal_code": "94105",
+    "description": "Example item description.",
+    "email": "you@example.com",
+    "phone": "555-555-5555",
+}
 
-     # Initialize the driver with the new options
+
+def start_craigslist_post(data):
+    # Initialize Chrome Options
+    options = webdriver.ChromeOptions()
+
+    # --- CRITICAL FIXES FOR HEADLESS / LINUX ENVIRONMENTS ---
+    options.add_argument("--headless=new")       # Run without a GUI (mandatory for servers)
+    options.add_argument("--no-sandbox")          # Bypass OS security model (fixes system bus errors)
+    options.add_argument("--disable-dev-shm-usage") # Overcomes limited resource problems in Docker/VPS
+    options.add_argument("--disable-gpu")          # Disables hardware acceleration
+    options.add_argument("--remote-debugging-port=9222") # Avoids port allocation crashes
+
+    # Initialize the driver with the new options
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     driver.implicitly_wait(10) # Wait up to 10 seconds for elements to appear
-    
+
     try:
         print("Opening Craigslist...")
         driver.get(data["city_url"])
-        
+
         # Click "create a posting"
         print("Starting new post...")
         driver.find_element(By.ID, "post").click()
-        
+
         # Select "for sale by owner" (typically the 3rd radio option, varies by region)
         # Note: You may need to adjust these selectors based on your specific location's workflow
-        driver.find_element(By.XPATH, "//input[@value='fso']").click() 
-        
+        driver.find_element(By.XPATH, "//input[@value='fso']").click()
+
         # Select category: "furniture - by owner" as an example
         driver.find_element(By.XPATH, "//input[@value='fsa']").click()
-        
+
         print("Filling out form data...")
         # Fill out Title
         driver.find_element(By.ID, "PostingTitle").send_keys(data["title"])
-        
+
         # Fill out Price
         driver.find_element(By.NAME, "price").send_keys(data["price"])
-        
+
         # Fill out Postal Code
         driver.find_element(By.ID, "postal_code").send_keys(data["postal_code"])
-        
+
         # Fill out Description
         driver.find_element(By.ID, "PostingBody").send_keys(data["description"])
-        
+
         # Fill out Contact Info
         driver.find_element(By.NAME, "FromEMail").send_keys(data["email"])
         driver.find_element(By.NAME, "ConfirmEMail").send_keys(data["email"])
         driver.find_element(By.NAME, "contact_phone").send_keys(data["phone"])
-        
+
         # Click Continue to go to the map/image upload step
         print("Form filled. Moving to next step...")
         driver.find_element(By.NAME, "go").click()
-        
+
         # Pause to let you review or manually complete images/publishing
         print("Template complete. Script holding open for 60 seconds for manual review.")
         time.sleep(60)
-        
+
     except Exception as e:
         print(f"An error occurred: {e}")
-        
+
     finally:
         driver.quit()
+
 
 if __name__ == "__main__":
     start_craigslist_post(item_data)
