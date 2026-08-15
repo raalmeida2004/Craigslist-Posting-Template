@@ -5,15 +5,19 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
-# Example item data — replace with your real posting details before running.
+# Framingham, MA is served by Boston's Craigslist region.
 item_data = {
-    "city_url": "https://sfbay.craigslist.org/",
-    "title": "Example Item Title",
-    "price": "100",
-    "postal_code": "94105",
-    "description": "Example item description.",
-    "email": "you@example.com",
-    "phone": "555-555-5555",
+    "city_url": "https://boston.craigslist.org/",
+    "title": "2026 Vtr tank pro *elite*",
+    "price": "1850",
+    "postal_code": "01702",
+    "description": (
+        "2026 keyless star, usb/12v port, 2 keys, Alarm, Bluetooth speaker, "
+        "come check one out, Well assembled no bolts missing or scratched up. "
+        "0 miles, clean title, Perfect for saving Money on gas"
+    ),
+    "email": "REPLACE_WITH_YOUR_EMAIL",
+    "phone": "REPLACE_WITH_YOUR_PHONE",
 }
 
 
