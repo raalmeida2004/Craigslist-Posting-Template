@@ -122,10 +122,12 @@ def start_craigslist_post(data):
         # Fill out Description
         driver.find_element(By.ID, "PostingBody").send_keys(data["description"])
 
-        # Fill out Contact Info
+        # Fill out Contact Info (Craigslist dropped the "confirm email" field;
+        # the phone input is disabled until "publish phone number" is checked)
         driver.find_element(By.NAME, "FromEMail").send_keys(data["email"])
-        driver.find_element(By.NAME, "ConfirmEMail").send_keys(data["email"])
-        driver.find_element(By.NAME, "contact_phone").send_keys(data["phone"])
+        if data.get("phone"):
+            click_when_ready(driver, (By.NAME, "show_phone_ok"))
+            driver.find_element(By.NAME, "contact_phone").send_keys(data["phone"])
 
         # Click Continue to go to the map/image upload step
         print("Form filled. Moving to next step...")
