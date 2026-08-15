@@ -1,7 +1,7 @@
 import time
 
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -24,6 +24,21 @@ item_data = {
     "email": "REPLACE_WITH_YOUR_EMAIL",
     "phone": "REPLACE_WITH_YOUR_PHONE",
 }
+
+
+def click_when_ready(driver, locator, timeout=15, retries=3):
+    """Wait for an element to be clickable and click it, re-locating on
+    StaleElementReferenceException (Craigslist's pages re-render their DOM
+    right after load, which can invalidate the element between find and click)."""
+    for attempt in range(retries):
+        try:
+            WebDriverWait(driver, timeout).until(
+                EC.element_to_be_clickable(locator)
+            ).click()
+            return
+        except StaleElementReferenceException:
+            if attempt == retries - 1:
+                raise
 
 
 def start_craigslist_post(data):
@@ -49,11 +64,10 @@ def start_craigslist_post(data):
         # Click "post to classifieds" (matched by the link's href pattern since
         # Craigslist's ids/visible text for this link vary by layout)
         print("Starting new post...")
-        WebDriverWait(driver, 15).until(
-            EC.element_to_be_clickable(
-                (By.CSS_SELECTOR, "a[href*='/post/'], a[href*='post.craigslist.org']")
-            )
-        ).click()
+        click_when_ready(
+            driver,
+            (By.CSS_SELECTOR, "a[href*='/post/'], a[href*='post.craigslist.org']"),
+        )
 
         # Craigslist embeds the whole posting flow in an iframe on the /post
         # landing page; switch into it before looking for any form elements.
@@ -67,33 +81,33 @@ def start_craigslist_post(data):
         # sub-region before showing the category picker.
         if data.get("sub_area"):
             try:
-                WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable(
-                        (By.XPATH, f"//label[contains(., '{data['sub_area']}')]")
-                    )
-                ).click()
-                driver.find_element(
-                    By.XPATH, "//button[contains(., 'continue')] | //input[@value='continue']"
-                ).click()
+                click_when_ready(
+                    driver,
+                    (By.XPATH, f"//label[contains(., '{data['sub_area']}')]"),
+                    timeout=10,
+                )
+                click_when_ready(
+                    driver,
+                    (By.XPATH, "//button[contains(., 'continue')] | //input[@value='continue']"),
+                )
             except TimeoutException:
                 pass  # this metro area didn't ask for a sub-region
 
         # Select "for sale by owner" (typically the 3rd radio option, varies by region)
         # Note: You may need to adjust these selectors based on your specific location's workflow
-        driver.find_element(By.XPATH, "//input[@value='fso']").click()
+        click_when_ready(driver, (By.XPATH, "//input[@value='fso']"))
 
         # Select the category. Craigslist's category ids are numeric and vary
         # by region, so match on the visible option-label text instead.
-        WebDriverWait(driver, 15).until(
-            EC.element_to_be_clickable(
-                (
-                    By.XPATH,
-                    f"//label[contains(@class, 'radio-option')]"
-                    f"[.//span[normalize-space(text())='{data['category']}']]",
-                )
-            )
-        ).click()
-        driver.find_element(By.NAME, "go").click()
+        click_when_ready(
+            driver,
+            (
+                By.XPATH,
+                f"//label[contains(@class, 'radio-option')]"
+                f"[.//span[normalize-space(text())='{data['category']}']]",
+            ),
+        )
+        click_when_ready(driver, (By.NAME, "go"))
 
         print("Filling out form data...")
         # Fill out Title
@@ -115,7 +129,7 @@ def start_craigslist_post(data):
 
         # Click Continue to go to the map/image upload step
         print("Form filled. Moving to next step...")
-        driver.find_element(By.NAME, "go").click()
+        click_when_ready(driver, (By.NAME, "go"))
 
         # Pause to let you review or manually complete images/publishing
         print("Template complete. Script holding open for 60 seconds for manual review.")
