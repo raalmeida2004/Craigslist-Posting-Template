@@ -3,6 +3,8 @@ import time
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
 # Framingham, MA is served by Boston's Craigslist region.
@@ -40,9 +42,14 @@ def start_craigslist_post(data):
         print("Opening Craigslist...")
         driver.get(data["city_url"])
 
-        # Click "create a posting"
+        # Click "post to classifieds" (matched by link text since Craigslist's
+        # markup/ids for this link have changed over the years)
         print("Starting new post...")
-        driver.find_element(By.ID, "post").click()
+        WebDriverWait(driver, 15).until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "//a[contains(., 'post to classifieds')]")
+            )
+        ).click()
 
         # Select "for sale by owner" (typically the 3rd radio option, varies by region)
         # Note: You may need to adjust these selectors based on your specific location's workflow
@@ -79,6 +86,10 @@ def start_craigslist_post(data):
 
     except Exception as e:
         print(f"An error occurred: {e}")
+        driver.save_screenshot("error_screenshot.png")
+        with open("error_page.html", "w", encoding="utf-8") as f:
+            f.write(driver.page_source)
+        print("Saved error_screenshot.png and error_page.html for debugging.")
 
     finally:
         driver.quit()
