@@ -1,6 +1,7 @@
 import time
 
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -10,6 +11,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 # Framingham, MA is served by Boston's Craigslist region.
 item_data = {
     "city_url": "https://boston.craigslist.org/",
+    "sub_area": "metro west",  # matches "choose the location that fits best" options
     "title": "2026 Vtr tank pro *elite*",
     "price": "1850",
     "postal_code": "01702",
@@ -51,6 +53,29 @@ def start_craigslist_post(data):
                 (By.CSS_SELECTOR, "a[href*='/post/'], a[href*='post.craigslist.org']")
             )
         ).click()
+
+        # Craigslist embeds the whole posting flow in an iframe on the /post
+        # landing page; switch into it before looking for any form elements.
+        WebDriverWait(driver, 15).until(
+            EC.frame_to_be_available_and_switch_to_it(
+                (By.CSS_SELECTOR, "iframe.cl-framed-application-iframe")
+            )
+        )
+
+        # Some metro areas (like Boston) ask you to narrow down to a
+        # sub-region before showing the category picker.
+        if data.get("sub_area"):
+            try:
+                WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable(
+                        (By.XPATH, f"//label[contains(., '{data['sub_area']}')]")
+                    )
+                ).click()
+                driver.find_element(
+                    By.XPATH, "//button[contains(., 'continue')] | //input[@value='continue']"
+                ).click()
+            except TimeoutException:
+                pass  # this metro area didn't ask for a sub-region
 
         # Select "for sale by owner" (typically the 3rd radio option, varies by region)
         # Note: You may need to adjust these selectors based on your specific location's workflow
