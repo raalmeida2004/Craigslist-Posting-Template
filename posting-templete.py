@@ -44,7 +44,7 @@ def start_craigslist_post(data):
     options = webdriver.ChromeOptions()
 
     # --- CRITICAL FIXES FOR HEADLESS / LINUX ENVIRONMENTS ---
-    options.add_argument("--headless=new")       # Run without a GUI (mandatory for servers)
+#    options.add_argument("--headless=new")       # Run without a GUI (mandatory for servers)
     options.add_argument("--no-sandbox")          # Bypass OS security model (fixes system bus errors)
     options.add_argument("--disable-dev-shm-usage") # Overcomes limited resource problems in Docker/VPS
     options.add_argument("--disable-gpu")          # Disables hardware acceleration
