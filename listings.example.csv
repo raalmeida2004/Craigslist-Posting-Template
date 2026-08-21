@@ -1,2 +1,3 @@
-city_url,sub_area,category,title,price,postal_code,description,email,phone
-https://boston.craigslist.org/,metro west,general for sale,2026 Vtr tank pro *elite*,1850,01702,"2026 keyless star, usb/12v port, 2 keys, Alarm, Bluetooth speaker, come check one out, Well assembled no bolts missing or scratched up. 0 miles, clean title, Perfect for saving Money on gas",REPLACE_WITH_YOUR_EMAIL,REPLACE_WITH_YOUR_PHONE
+site,post_date,city_url,sub_area,category,title,price,postal_code,description,email,phone
+craigslist,2026-08-21,https://boston.craigslist.org/,metro west,general for sale,2026 Vtr tank pro *elite*,1850,01702,"2026 keyless star, usb/12v port, 2 keys, Alarm, Bluetooth speaker, come check one out, Well assembled no bolts missing or scratched up. 0 miles, clean title, Perfect for saving Money on gas",REPLACE_WITH_YOUR_EMAIL,REPLACE_WITH_YOUR_PHONE
+youtube,2026-09-01,,,,Motor-scooter shop grand opening teaser,,,"Not automated yet - tracked here for planning.",,

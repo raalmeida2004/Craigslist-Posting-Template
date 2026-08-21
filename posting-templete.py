@@ -12,6 +12,11 @@ from webdriver_manager.chrome import ChromeDriverManager
 LISTINGS_FILE = "listings.csv"
 REQUIRED_FIELDS = ["city_url", "title", "price", "postal_code", "description", "category", "email"]
 
+# Sites this script actually knows how to post to. Add a real posting
+# function for a new site, then add its name here, before rows using it
+# will do anything besides print a "not automated yet" message.
+SUPPORTED_SITES = {"craigslist"}
+
 
 def load_listings(path=LISTINGS_FILE):
     with open(path, newline="", encoding="utf-8") as f:
@@ -21,7 +26,9 @@ def load_listings(path=LISTINGS_FILE):
 def choose_listing(listings):
     print("\nListings in", LISTINGS_FILE + ":")
     for i, listing in enumerate(listings, start=1):
-        print(f"  {i}. {listing['title']} (${listing['price']})")
+        site = (listing.get("site") or "craigslist").strip()
+        post_date = listing.get("post_date", "").strip() or "no date set"
+        print(f"  {i}. [{site}] {listing['title']} (${listing['price']}) - {post_date}")
     while True:
         choice = input(f"Pick a listing to post (1-{len(listings)}): ").strip()
         if choice.isdigit() and 1 <= int(choice) <= len(listings):
@@ -44,12 +51,24 @@ def click_when_ready(driver, locator, timeout=15, retries=3):
                 raise
 
 
-def start_craigslist_post(data):
+def post_listing(data):
+    site = (data.get("site") or "craigslist").strip().lower()
+    if site not in SUPPORTED_SITES:
+        print(
+            f"Skipping '{data.get('title', '<untitled>')}': posting to '{site}' isn't "
+            f"automated yet (only {', '.join(sorted(SUPPORTED_SITES))} right now)."
+        )
+        return
+
     missing = [f for f in REQUIRED_FIELDS if not data.get(f)]
     if missing:
         print(f"Skipping listing: missing required column(s) in {LISTINGS_FILE}: {', '.join(missing)}")
         return
 
+    start_craigslist_post(data)
+
+
+def start_craigslist_post(data):
     # Initialize Chrome Options
     options = webdriver.ChromeOptions()
 
@@ -169,4 +188,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     chosen = listings[0] if len(listings) == 1 else choose_listing(listings)
-    start_craigslist_post(chosen)
+    post_listing(chosen)
