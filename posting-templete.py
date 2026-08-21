@@ -1,3 +1,6 @@
+import csv
+import sys
+
 from selenium import webdriver
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.chrome.service import Service
@@ -6,22 +9,24 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
-# Framingham, MA is served by Boston's Craigslist region.
-item_data = {
-    "city_url": "https://boston.craigslist.org/",
-    "sub_area": "metro west",  # matches "choose the location that fits best" options
-    "category": "general for sale",  # matches an "option-label" on the category picker
-    "title": "2026 Vtr tank pro *elite*",
-    "price": "1850",
-    "postal_code": "01702",
-    "description": (
-        "2026 keyless star, usb/12v port, 2 keys, Alarm, Bluetooth speaker, "
-        "come check one out, Well assembled no bolts missing or scratched up. "
-        "0 miles, clean title, Perfect for saving Money on gas"
-    ),
-    "email": "REPLACE_WITH_YOUR_EMAIL",
-    "phone": "REPLACE_WITH_YOUR_PHONE",
-}
+LISTINGS_FILE = "listings.csv"
+REQUIRED_FIELDS = ["city_url", "title", "price", "postal_code", "description", "category", "email"]
+
+
+def load_listings(path=LISTINGS_FILE):
+    with open(path, newline="", encoding="utf-8") as f:
+        return [row for row in csv.DictReader(f) if row.get("title")]
+
+
+def choose_listing(listings):
+    print("\nListings in", LISTINGS_FILE + ":")
+    for i, listing in enumerate(listings, start=1):
+        print(f"  {i}. {listing['title']} (${listing['price']})")
+    while True:
+        choice = input(f"Pick a listing to post (1-{len(listings)}): ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(listings):
+            return listings[int(choice) - 1]
+        print("Invalid choice, try again.")
 
 
 def click_when_ready(driver, locator, timeout=15, retries=3):
@@ -40,6 +45,11 @@ def click_when_ready(driver, locator, timeout=15, retries=3):
 
 
 def start_craigslist_post(data):
+    missing = [f for f in REQUIRED_FIELDS if not data.get(f)]
+    if missing:
+        print(f"Skipping listing: missing required column(s) in {LISTINGS_FILE}: {', '.join(missing)}")
+        return
+
     # Initialize Chrome Options
     options = webdriver.ChromeOptions()
 
@@ -148,4 +158,15 @@ def start_craigslist_post(data):
 
 
 if __name__ == "__main__":
-    start_craigslist_post(item_data)
+    try:
+        listings = load_listings()
+    except FileNotFoundError:
+        print(f"{LISTINGS_FILE} not found. Copy listings.example.csv to {LISTINGS_FILE} and fill in your info.")
+        sys.exit(1)
+
+    if not listings:
+        print(f"No listings found in {LISTINGS_FILE}. Add a row and try again.")
+        sys.exit(1)
+
+    chosen = listings[0] if len(listings) == 1 else choose_listing(listings)
+    start_craigslist_post(chosen)
